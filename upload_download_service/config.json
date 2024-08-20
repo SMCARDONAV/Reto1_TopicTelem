@@ -1,0 +1,6 @@
+{
+    "upload_directory": "Files",
+    "download_directory": "Files",
+    "ip": "0.0.0.0",
+    "port": 5003
+}
