@@ -1,2 +1,3 @@
 # Ignorar el archivo de configuración .env
-.env
+env/
+reto1_telematica/
