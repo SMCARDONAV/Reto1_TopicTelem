@@ -7,7 +7,7 @@ from node_manager.hash import getHash
 
 MAX_BITS = 10
 MAX_NODES = 2 ** MAX_BITS
-api_connect_peer = "/api/connectpeer/"
+api_connect_peer = "/api/connectpeer"
 api_update_pred_succ = "/api/updatePredSucc"
 api_lookUpId = "/api/lookUpId/"
 api_update_finger_table = "/api/updateFingerTable"
@@ -72,9 +72,10 @@ class Node:
             recvIPPort = self.getSuccessor((ip, port), self.id)
             # TODO: Pasar url a otro lugar
             print(recvIPPort)
-            url = self.urlFormatter(recvIPPort, api_connect_peer, str(self.address))
+            url = self.urlFormatter(recvIPPort, api_connect_peer)
             # url = "http://"+recvIPPort+"/api/connectpeer/"+self.address
-            response = requests.get(url)
+            request = [self.address]
+            response = requests.post(url, json=request)
             # peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # peerSocket.connect(recvIPPort)
             # sDataList = [0, self.address]
@@ -165,7 +166,8 @@ class Node:
         # First inform my succ to update its pred
         # pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # pSocket.connect(self.succ)
-        url = "http://"+self.succ+"/api/updatePredSucc"
+        # url = "http://"+self.succ+"/api/updatePredSucc"
+        url = self.urlFormatter(self.succ, api_update_pred_succ)
         request = [0, self.pred]
         # pSocket.sendall(pickle.dumps([4, 0, self.pred]))
         requests.post(url, json=request)
@@ -173,37 +175,38 @@ class Node:
         # Then inform my pred to update its succ
         # pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # pSocket.connect(self.pred)
-        urlPred = "http://"+self.pred+"/api/updatePredSucc"
+        # urlPred = "http://"+self.pred+"/api/updatePredSucc"
+        urlPred = self.urlFormatter(self.pred, api_update_pred_succ)
         # pSocket.sendall(pickle.dumps([4, 1, self.succ]))
         requestPred = [1, self.succ]
         # pSocket.close()
         requests.post(urlPred, json=requestPred)
         print("I had files:", self.filenameList)
         # And also replicating its files to succ as a client
-        print("Replicating files to other nodes before leaving")
-        for filename in self.filenameList:
-            # pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # pSocket.connect(self.succ)
-            urlFiles = "http://"+self.succ+"/api/fileClient"
-            # sDataList = [1, 1, filename]
-            requestFileClient = [1, filename]
-            requests.post(urlFiles, json=requestFileClient)
-            # pSocket.sendall(pickle.dumps(sDataList))
-            # TODO: organizar envio de archivo
-            # with open(filename, 'rb') as file:
-            #     # Getting back confirmation
-            #     #pSocket.recv(buffer)
-            #     self.sendFile(pSocket, filename)
-            #     #pSocket.close()
-            #     print("File replicated")
-            # pSocket.close()
+        # print("Replicating files to other nodes before leaving")
+        # for filename in self.filenameList:
+        #     # pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #     # pSocket.connect(self.succ)
+        #     urlFiles = "http://"+self.succ+"/api/fileClient"
+        #     # sDataList = [1, 1, filename]
+        #     requestFileClient = [1, filename]
+        #     requests.post(urlFiles, json=requestFileClient)
+        #     # pSocket.sendall(pickle.dumps(sDataList))
+        #     # TODO: organizar envio de archivo
+        #     # with open(filename, 'rb') as file:
+        #     #     # Getting back confirmation
+        #     #     #pSocket.recv(buffer)
+        #     #     self.sendFile(pSocket, filename)
+        #     #     #pSocket.close()
+        #     #     print("File replicated")
+        #     # pSocket.close()
         self.updateOtherFTables()   # Telling others to update their f tables
         self.pred = (self.ip, self.port)    # Chaning the pointers to default
         self.predID = self.id
         self.succ = (self.ip, self.port)
         self.succID = self.id
         self.fingerTable.clear()
-        print(self.address, "has left the network")
+        return self.address, "has left the network"
 
     def uploadFile(self, filename, recvIPport, replicate):
         print("Uploading file", filename)
@@ -252,6 +255,7 @@ class Node:
         #     self.receiveFile(cSocket, filename)
 
     def printFTable(self):
+        print("hola")
         print("Printing F Table")
         for key, value in self.fingerTable.items():
             print("KeyID:", key, "Value", value)
@@ -354,13 +358,13 @@ class Node:
             return sDataList
     
     def updateSucc(self, rDataList):
-        newSucc = rDataList[2]
+        newSucc = rDataList[1]
         self.succ = newSucc
         self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
         # print("Updated succ to", self.succID)
 
     def updatePred(self, rDataList):
-        newPred = rDataList[2]
+        newPred = rDataList[1]
         self.pred = newPred
         self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
         # print("Updated pred to", self.predID)

@@ -6,8 +6,9 @@ IP = "127.0.0.1"
 PORT = 2000
 myNode = Node(IP, PORT)
 
-def create_node(IP, PORT):
-    myNode = Node(IP, PORT)
+def create_node(ip, port):
+    global myNode
+    myNode = Node(ip, port)
     print("My ID is:", myNode.id)
     # myNode.start()
 
@@ -15,14 +16,15 @@ app = Flask(__name__)
 
 @app.route("/api/joinNetwork", methods=['POST'])
 def join_network():
-    ip = input("Enter IP to connect: ")
-    port = input("Enter port: ")
+    received_data = request.get_json()
+    ip = received_data[0]
+    port = received_data[1]
     message = myNode.sendJoinRequest(ip, int(port))
     return jsonify(message)
 
 @app.route("/api/leaveNetwork", methods=['POST'])
 def leave_network():
-    myNode.leaveNetwork()
+    return jsonify(myNode.leaveNetwork())
 
 @app.route("/api/uploadFile", methods=['POST'])
 def upload_file():
@@ -40,7 +42,7 @@ def download_file():
 
 @app.route("/api/fingerTable", methods=['GET'])
 def get_finger_table():
-    myNode.printFTable()
+    return jsonify(myNode.printFTable())
 
 @app.route("/api/predsucc", methods=['GET'])
 def get_pred_succ():
@@ -51,8 +53,10 @@ def joinNode(keyID):
     return jsonify(myNode.lookupID(keyID))
 
 
-@app.route("/api/connectpeer/<address>", methods=['GET'])
-def connectPeer(address):
+@app.route("/api/connectpeer", methods=['POST'])
+def connectPeer():
+    received_data = request.get_json()
+    address = received_data[0]
     print("Connection with:", address[0], ":", address[1])
     print("Join network request recevied")
     return jsonify(myNode.joinNode(address))
@@ -67,10 +71,12 @@ def updateFingerTable():
 @app.route("/api/updatePredSucc", methods=['POST'])
 def updatePredSucc():
     received_data = request.get_json()
-    if received_data[1] == 1:
+    if received_data[0] == 1:
         myNode.updateSucc(received_data)
+        return jsonify(myNode.succ)
     else:
         myNode.updatePred(received_data)
+        return jsonify(myNode.pred)
 
 
 @app.route("/api/fileClient", methods=['POST'])
