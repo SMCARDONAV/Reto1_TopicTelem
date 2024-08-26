@@ -1,38 +1,47 @@
 import sys
+import os
 from threading import Thread
-from node_manager import node_app
-from node_manager.node_manager import create_node
+import yaml
 
-IP = "127.0.0.1"
-PORT = 2000
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# def run_indexer():
-#     indexer_app.run(host='0.0.0.0', port=5001)
+from node_manager import node_app, node_manager
 
-# def run_upload_service():
-#     upload_service_app.run(host='0.0.0.0', port=5002)
+def load_config():
+    with open('config.yaml', 'r') as f:
+        return yaml.safe_load(f)
 
-# def run_download_service():
-#     download_service_app.run(host='0.0.0.0', port=5003)
+def create_and_run_node(ip, port):
+    config = load_config()
+    config['ip'] = ip
+    config['port'] = port
 
-def run_node():
-    create_node(IP, PORT)
-    node_app.run(host='0.0.0.0', port=PORT)
+    node = node_manager.create_node(
+        config['ip'], 
+        config['port'], 
+        config.get('directory', None), 
+        config.get('seed_url', None)
+    )
+    return node
 
-if len(sys.argv) < 3:
-    print("Arguments not supplied (Defaults used)")
-else:
-    IP = sys.argv[1]
-    PORT = int(sys.argv[2])
+def start_grpc_server(node):
+    grpc_thread = Thread(target=node.start)
+    grpc_thread.start()
+
+def start_flask_app(ip, port):
+    node_app.run(host='0.0.0.0', port=port)
+
+def parse_arguments():
+    if len(sys.argv) < 3:
+        print("Arguments not supplied (Defaults used)")
+        return "127.0.0.1", 2000
+    return sys.argv[1], int(sys.argv[2])
+
+def main():
+    ip, port = parse_arguments()
+    node = create_and_run_node(ip, port)
+    start_grpc_server(node)
+    start_flask_app(ip, port)
 
 if __name__ == "__main__":
-    # Thread(target=run_node).start()
-    run_node()
-# myNode = Node(IP, PORT)
-# print("My ID is:", myNode.id)
-# myNode.start()
-
-
-#     Thread(target=run_indexer).start()
-#     Thread(target=run_upload_service).start()
-#     Thread(target=run_download_service).start()
+    main()

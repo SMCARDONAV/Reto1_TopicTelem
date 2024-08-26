@@ -1,1 +1,0 @@
-from .indexer import app as indexer_app

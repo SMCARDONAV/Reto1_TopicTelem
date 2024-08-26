@@ -1,18 +1,22 @@
+import yaml
 from flask import Flask, jsonify, request
-from node_manager.node import Node
+from .node import Node
 from node_manager.hash import getHash
 
 IP = "127.0.0.1"
 PORT = 2000
-myNode = Node(IP, PORT)
-
-def create_node(ip, port):
-    global myNode
-    myNode = Node(ip, port)
-    print("My ID is:", myNode.id)
-    # myNode.start()
+myNode = None  # Inicializa como None
 
 app = Flask(__name__)
+
+def create_node(ip, port, directory=None, seed_url=None):
+    global myNode
+    myNode = Node(ip, port, directory, seed_url)
+    return myNode
+
+@app.route('/')
+def home():
+    return "Node Manager Home"
 
 @app.route("/api/joinNetwork", methods=['POST'])
 def join_network():
@@ -52,21 +56,18 @@ def get_pred_succ():
 def joinNode(keyID):
     return jsonify(myNode.lookupID(keyID))
 
-
 @app.route("/api/connectpeer", methods=['POST'])
 def connectPeer():
     received_data = request.get_json()
     address = received_data[0]
     print("Connection with:", address[0], ":", address[1])
-    print("Join network request recevied")
+    print("Join network request received")
     return jsonify(myNode.joinNode(address))
-
 
 @app.route("/api/updateFingerTable", methods=['POST'])
 def updateFingerTable():
     myNode.updateFTable()
     return jsonify(myNode.succ)
-
 
 @app.route("/api/updatePredSucc", methods=['POST'])
 def updatePredSucc():
@@ -78,13 +79,12 @@ def updatePredSucc():
         myNode.updatePred(received_data)
         return jsonify(myNode.pred)
 
-
 @app.route("/api/fileClient", methods=['POST'])
 def transferFile():
     # print("Connection with:", address[0], ":", address[1])
-    print("Upload/Download request recevied")
+    print("Upload/Download request received")
     # myNode.transferFile(connection, address, rDataList)
 
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=myNode.port)
+if __name__ == "__main__":
+    create_node(IP, PORT)  # Inicializa myNode
+    app.run(host=IP, port=PORT, debug=True)
