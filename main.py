@@ -38,10 +38,11 @@ def parse_arguments():
     return sys.argv[1], int(sys.argv[2])
 
 def main():
-    ip, port = parse_arguments()
-    node = create_and_run_node(ip, port)
+    ip, flask_port = parse_arguments()
+    grpc_port = flask_port + 1  # Por ejemplo, si Flask está en 2000, gRPC estará en 2001
+    node = create_and_run_node(ip, grpc_port)
     start_grpc_server(node)
-    start_flask_app(ip, port)
+    start_flask_app(ip, flask_port)
 
 if __name__ == "__main__":
     main()

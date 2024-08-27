@@ -3,15 +3,18 @@ from flask import Flask, jsonify, request
 from .node import Node
 from node_manager.hash import getHash
 
+# Configuración por defecto para IP y puertos
 IP = "127.0.0.1"
-PORT = 2000
+FLASK_PORT = 2000
+GRPC_PORT = 2001  # Puerto separado para gRPC
+
 myNode = None  # Inicializa como None
 
 app = Flask(__name__)
 
-def create_node(ip, port, directory=None, seed_url=None):
+def create_node(ip, grpc_port, directory=None, seed_url=None):
     global myNode
-    myNode = Node(ip, port, directory, seed_url)
+    myNode = Node(ip, grpc_port, directory, seed_url)
     return myNode
 
 @app.route('/')
@@ -20,12 +23,30 @@ def home():
 
 @app.route("/api/joinNetwork", methods=['POST'])
 def join_network():
-    received_data = request.get_json()
-    ip = received_data[0]
-    port = received_data[1]
-    message = myNode.sendJoinRequest(ip, int(port))
-    return jsonify(message)
+    try:
+        # Obtener los datos en formato de lista
+        received_data = request.get_json()
+        
+        # Verificar el formato de los datos recibidos
+        if not isinstance(received_data, list) or len(received_data) != 2:
+            return jsonify({"error": "Invalid data format. Expected a list with IP and port."}), 400
 
+        ip = received_data[0]
+        port = received_data[1]
+        
+        # Validar IP y puerto
+        if not isinstance(ip, str) or not isinstance(port, int):
+            return jsonify({"error": "Invalid data format. IP should be a string and port should be an integer."}), 400
+
+        print('joinNetwork')
+        message = myNode.sendJoinRequest(ip, int(port))
+        return jsonify(message)
+    
+    except Exception as e:
+        # Log del error
+        print(f"Error occurred: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+    
 @app.route("/api/leaveNetwork", methods=['POST'])
 def leave_network():
     return jsonify(myNode.leaveNetwork())
@@ -50,7 +71,7 @@ def get_finger_table():
 
 @app.route("/api/predsucc", methods=['GET'])
 def get_pred_succ():
-    return jsonify("My ID:", myNode.id, "Predecessor:", myNode.predID, "Successor:", myNode.succID)
+    return jsonify({"My ID": myNode.id, "Predecessor": myNode.predID, "Successor": myNode.succID})
 
 @app.route("/api/lookUpId/<int:keyID>", methods=['GET'])
 def joinNode(keyID):
@@ -86,5 +107,34 @@ def transferFile():
     # myNode.transferFile(connection, address, rDataList)
 
 if __name__ == "__main__":
-    create_node(IP, PORT)  # Inicializa myNode
-    app.run(host=IP, port=PORT, debug=True)
+    import sys
+    import os
+    from threading import Thread
+    from node_manager import node_app
+
+    # Crea y ejecuta el nodo
+    def create_and_run_node(ip, grpc_port):
+        node = create_node(ip, grpc_port)
+        return node
+
+    def start_grpc_server(node):
+        grpc_thread = Thread(target=node.start)
+        grpc_thread.start()
+        print(f"gRPC server started on {ip}:{grpc_port}")
+
+    def start_flask_app(ip, port):
+        app.run(host='0.0.0.0', port=port, debug=True)
+
+    # Configura el puerto de gRPC y el puerto de Flask
+    ip = IP
+    grpc_port = GRPC_PORT
+    flask_port = FLASK_PORT
+
+    # Crea y ejecuta el nodo
+    node = create_and_run_node(ip, grpc_port)
+
+    # Inicia el servidor gRPC
+    start_grpc_server(node)
+
+    # Inicia la aplicación Flask
+    start_flask_app(ip, flask_port)

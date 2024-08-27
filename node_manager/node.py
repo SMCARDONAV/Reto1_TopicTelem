@@ -30,7 +30,7 @@ class FileServicer(file_service_pb2_grpc.FileServiceServicer):
             if os.path.isfile(os.path.join(self.node.directory, filename))
         ]
         return file_service_pb2.ListFilesResponse(files=files)
-
+    
     def DummyDownload(self, request, context):
         return file_service_pb2.DownloadResponse(message=f"Dummy download of {request.filename}")
 
@@ -50,20 +50,22 @@ class Node:
         self.succ = (ip, port)
         self.succID = self.id
         self.fingerTable = OrderedDict()
-        self.seed_url = seed_url  # Agregando el atributo seed_url
+        self.seed_url = seed_url
 
     def getSuccessor(self, address, keyID):
-        rDataList = [1, address]      # Default values to run while loop
+        rDataList = [1, address]  # Default values to run while loop
         recvIPPort = rDataList[1]
         while rDataList[0] == 1:
             try:
                 url = self.urlFormatter(recvIPPort, api_lookUpId, str(keyID))
                 response = requests.get(url)
+                response.raise_for_status()  # Raise an error for bad status codes
                 if response.status_code == 200:
                     rDataList = response.json()
                     recvIPPort = rDataList[1]
-            except requests.exceptions.HTTPError:
-                print("Connection denied while getting Successor")
+            except requests.exceptions.RequestException as e:
+                print(f"Request error while getting successor: {e}")
+                break
         return recvIPPort
 
     def urlFormatter(self, address, api, urlParam=None):
@@ -90,8 +92,14 @@ class Node:
                 request = [1, self.address]
                 requests.post(url, json=request)
                 return "Nodo unido correctamente"
-        except requests.exceptions.HTTPError:
-            print("Connection error")
+            else:
+                return "Failed to join network: response error", response.status_code
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            return "Request error", 500
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return "Unexpected error", 500
 
     def updateFTable(self):
         for i in range(MAX_BITS):
@@ -114,8 +122,8 @@ class Node:
                 here = response.json()
                 if here == self.succ:
                     break
-            except requests.exceptions.HTTPError:
-                print("Connection error")
+            except requests.exceptions.RequestException as e:
+                print(f"Error en la conexión al actualizar otras tablas de finger: {e}")
 
     def sendFile(self, connection, filename):
         print("Sending file:", filename)
@@ -128,12 +136,12 @@ class Node:
         requestPred = [1, self.succ]
         requests.post(urlPred, json=requestPred)
         self.updateOtherFTables()
-        self.pred = (self.ip, self.port)
+        self.pred = (self.ip, self.grpc_port)
         self.predID = self.id
-        self.succ = (self.ip, self.port)
+        self.succ = (self.ip, self.grpc_port)
         self.succID = self.id
         self.fingerTable.clear()
-        return self.address, "has left the network"
+        return self.address, "ha salido de la red"
 
     def uploadFile(self, filename, recvIPport, replicate):
         print("Uploading file", filename)
@@ -194,7 +202,7 @@ class Node:
             self.updateFTable()
             self.updateOtherFTables()
             return sDataList
-    
+
     def updateSucc(self, rDataList):
         newSucc = rDataList[1]
         self.succ = newSucc
@@ -206,7 +214,7 @@ class Node:
         self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
 
     def transferFile(self, connection, address, rDataList):
-        print("transfer file")
+        print("Transferring file")
 
     def asAClientThread(self):
         self.printMenu()
@@ -233,9 +241,11 @@ class Node:
             print("Invalid choice")
 
     def start(self):
+        grpc_port = self.port  # Asegúrate de que self.port esté definido
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         file_service_pb2_grpc.add_FileServiceServicer_to_server(FileServicer(self), server)
-        server.add_insecure_port(f"{self.ip}:{self.port}")
+        server.add_insecure_port(f"{self.ip}:{grpc_port}")
         server.start()
-        print(f"Server started on {self.ip}:{self.port}")
+        print(f"gRPC Server started on {self.ip}:{grpc_port}")
         server.wait_for_termination()
+
