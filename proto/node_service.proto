@@ -33,6 +33,6 @@ message JoinNodeResponse{
 }
 
 message Address{
-    string ip = 2;
-    int32 port = 3;
+    string ip = 1;
+    int32 port = 2;
 }

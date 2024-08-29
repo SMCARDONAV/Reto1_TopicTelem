@@ -2,6 +2,7 @@ import grpc
 from proto import file_service_pb2
 from proto import file_service_pb2_grpc
 
+
 def run():
     channel = grpc.insecure_channel('localhost:2004')
     stub = file_service_pb2_grpc.FileServiceStub(channel)
@@ -16,6 +17,7 @@ def run():
 
     download_response = stub.DummyDownload(file_service_pb2.DownloadRequest(filename="example.txt"))
     print("DummyDownload Response:", download_response.message)
+
 
 if __name__ == '__main__':
     run()

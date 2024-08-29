@@ -1,4 +1,4 @@
-
+import os
 from collections import OrderedDict
 from concurrent import futures
 import time
@@ -8,6 +8,7 @@ from node_manager.hash import getHash
 from proto import file_service_pb2, file_service_pb2_grpc, node_service_pb2, node_service_pb2_grpc
 
 myNode = None
+end = False
 MAX_BITS = 10
 MAX_NODES = 2 ** MAX_BITS
 
@@ -54,20 +55,44 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
             print(f"Error occurred: {e}")
             return {"error": "An unexpected error occurred."}, 500
         
-    def LookUpID(self, request):
-        return self.node.lookupID(request.id)
+    def LookUpID(self, request, context):
+        response = self.node.lookupID(request.id)
+        print(response[1])
+        ip, port = response[1]
+        address = node_service_pb2.Address(ip=ip, port=port)
+        return node_service_pb2.JoinNodeResponse(identifier=response[0], address=address)
+
     
     def ConnectPeer(self, request, context):
-        address = request
-        print("Connection with:", address[0], ":", address[1])
-        print("Join network request received")
-        return self.node.joinNode(address)
+        try:
+            address = request
+            print("Connection with:", address.ip, ":", address.port)
+            print("Join network request received")
+            ip, port = self.node.joinNode(address)
+            return node_service_pb2.Address(ip=ip, port=port)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return node_service_pb2.Address(ip="0.0.0.0", port=0)
     
     def LeaveNetwork(self, request, context):
         return self.node.leaveNetwork()
     
     def GetFingerTable(self, request, context):
         return self.node.printFTable()
+    
+    def UpdatePredSucc(self, request, context):
+        if request.identifier == 1:
+            self.node.updateSucc(request)
+            ip, port = self.node.succ
+            return node_service_pb2.Address(ip=ip, port=port)
+        else:
+            self.node.updatePred(request)
+            ip, port = self.node.pred
+            return node_service_pb2.Address(ip=ip, port=port)
+
+    def UpdateFingerTable(self, request, context):
+        self.node.updateFTable()
+        return node_service_pb2.Address(ip=self.node.succ[0], port=self.node.succ[1])
     
     def GetPredSucc(self, request, context):
         return {"My ID": self.node.id, "Predecessor": self.node.predID, "Successor": self.node.succID}
@@ -88,34 +113,35 @@ class Node:
         self.fingerTable = OrderedDict()
         self.seed_url = seed_url
 
-    def getSuccessorPetition(serverAddress, keyID):
+    def getSuccessorPetition(self, serverAddress, keyID):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
-            stub = node_service_pb2_grpc.NodeService(channel)
+            stub = node_service_pb2_grpc.NodeServiceStub(channel)
             request = node_service_pb2.NodeId(id=keyID)
             response = stub.LookUpID(request)
-            return [response.identifier, (response.Address.ip, response.Address.port)]        
+            return [response.identifier, (response.address.ip, response.address.port)]       
 
-    def getConnectPeerPetition(serverAddress, address):
+    def getConnectPeerPetition(self, serverAddress, address):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
-            stub = node_service_pb2_grpc.NodeService(channel)
+            stub = node_service_pb2_grpc.NodeServiceStub(channel)
             request = node_service_pb2.Address(ip=address[0], port=address[1])
             response = stub.ConnectPeer(request)
-            return (response.Address.ip, response.Address.port)
+            return (response.ip, response.port)
         
-    def UpdatePredSuccPetition(serverAddress, action, addressr):
+    def UpdatePredSuccPetition(self, serverAddress, action, addressr):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
-            stub = node_service_pb2_grpc.NodeService(channel)
-            address = node_service_pb2.Address(ip=addressr[0], port=addressr[1])
+            stub = node_service_pb2_grpc.NodeServiceStub(channel)
+            ip, port =  addressr
+            address = node_service_pb2.Address(ip=ip, port=port)
             request = node_service_pb2.UpdatePredSuccRequest(identifier=action, address=address)
             response = stub.UpdatePredSucc(request)
-            return (response.Address.ip, response.Address.port)
+            return (response.ip, response.port)
         
-    def UpdateFingerTablePetition(serverAddress):
+    def UpdateFingerTablePetition(self, serverAddress):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
-            stub = node_service_pb2_grpc.NodeService(channel)
-            request = node_service_pb2.DefaultServiceRequest()
+            stub = node_service_pb2_grpc.NodeServiceStub(channel)
+            request = node_service_pb2.DefaultRequest()
             response = stub.UpdateFingerTable(request)
-            return (response.Address.ip, response.Address.port)        
+            return (response.ip, response.port)        
 
     def getSuccessor(self, address, keyID):
         rDataList = [1, address]
@@ -134,14 +160,12 @@ class Node:
         try:
             recvIPPort = self.getSuccessor((ip, port), self.id)
             response = self.getConnectPeerPetition(recvIPPort, self.address)
-            rDataList = []           
-            rDataList = response
-            self.pred = rDataList[0]
+            self.pred = response
             self.predID = getHash(self.pred[0] + ":" + str(self.pred[1]))
             self.succ = recvIPPort
             self.succID = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
             response = self.UpdatePredSuccPetition(self.pred, 1, self.address)
-            return "Nodo unido correctamente"
+            print("Nodo unido correctamente")
         except grpc.RpcError as e:
             print(f"Request error: {e}")
             return "Request error", 500
@@ -190,7 +214,7 @@ class Node:
             if here == self.address:
                 break
             try:
-                response = self.UpdateFingerTablePetition(here)            
+                response = self.UpdateFingerTablePetition(here)         
                 here = response
                 if here == self.succ:
                     break
@@ -199,7 +223,7 @@ class Node:
     
     def joinNode(self, peerIPport):
         if peerIPport:
-            peerID = getHash(peerIPport[0] + ":" + str(peerIPport[1]))
+            peerID = getHash(peerIPport.ip + ":" + str(peerIPport.port))
             oldPred = self.pred
             self.pred = peerIPport
             self.predID = peerID
@@ -207,23 +231,68 @@ class Node:
             time.sleep(0.1)
             self.updateFTable()
             self.updateOtherFTables()
-            return sDataList
+            return_value = sDataList[0]
+            print(return_value)
+            return return_value
+           
         
     def leaveNetwork(self):
         self.UpdatePredSuccPetition(self.succ, 0, self.pred)
         self.UpdatePredSuccPetition(self.pred, 1, self.succ)
         self.updateOtherFTables()
-        self.pred = (self.ip, self.grpc_port)
+        self.pred = (self.ip, self.port)
         self.predID = self.id
-        self.succ = (self.ip, self.grpc_port)
+        self.succ = (self.ip, self.port)
         self.succID = self.id
         self.fingerTable.clear()
         return self.address, "ha salido de la red"
+    
+    def updateSucc(self, rDataList):
+        newSucc = rDataList.address
+        newSucc = (newSucc.ip, newSucc.port)
+        self.succ = newSucc
+        self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
+
+    def updatePred(self, rDataList):
+        newPred = rDataList.address
+        newPred = (newPred.ip, newPred.port)
+        self.pred = newPred
+        self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
     
     def printFTable(self):
         print("Printing F Table")
         for key, value in self.fingerTable.items():
             print("KeyID:", key, "Value", value)
+
+    def printMenu(self):
+        print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
+        print("5. Print Finger Table\n6. Print my predecessor and successor\nf. Terminar proceso")
+
+    def asAClientThread(self):
+        self.printMenu()
+        userChoice = input()
+        if userChoice == "1":
+            ip = input("Enter IP to connect: ")
+            port = input("Enter port: ")
+            self.sendJoinRequest(ip, int(port))
+        elif userChoice == "2":
+            self.leaveNetwork()
+        elif userChoice == "3":
+            filename = input("Enter filename: ")
+            fileID = getHash(filename)
+            recvIPport = self.getSuccessor(self.succ, fileID)
+            self.uploadFile(filename, recvIPport, True)
+        elif userChoice == "4":
+            filename = input("Enter filename: ")
+            self.downloadFile(filename)
+        elif userChoice == "5":
+            self.printFTable()
+        elif userChoice == "6":
+            print("My ID:", self.id, "Predecessor:", self.predID, "Successor:", self.succID)
+        elif userChoice == "f":
+            global end
+            end = True
+
     
     def start(self):
         grpc_port = self.port
@@ -233,6 +302,10 @@ class Node:
         server.add_insecure_port(f"{self.ip}:{grpc_port}")
         server.start()
         print(f"gRPC Server started on {self.ip}:{grpc_port}")
+        while end != True:
+            print("Listening to other clients")   
+            self.asAClientThread()
+        
         server.wait_for_termination()
         
     
