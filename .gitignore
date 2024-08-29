@@ -1,4 +1,4 @@
 # Ignorar el archivo de configuración .env
-env/
+myenv/
 reto1_telematica/
 venvr1_grpc/

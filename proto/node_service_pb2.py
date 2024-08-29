@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12node_service.proto\x12\x0bnodeservice\"\x10\n\x0e\x44\x65\x66\x61ultRequest\"\x14\n\x06NodeId\x12\n\n\x02id\x18\x01 \x01(\x05\"\"\n\x0fResponseMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"R\n\x15UpdatePredSuccRequest\x12\x12\n\nidentifier\x18\x01 \x01(\x05\x12%\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x14.nodeservice.Address\"M\n\x10JoinNodeResponse\x12\x12\n\nidentifier\x18\x01 \x01(\x05\x12%\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x14.nodeservice.Address\"#\n\x07\x41\x64\x64ress\x12\n\n\x02ip\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x32\xd1\x04\n\x0bNodeService\x12\x43\n\x0bJoinNetwork\x12\x14.nodeservice.Address\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12K\n\x0cLeaveNetwork\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12M\n\x0eGetFingerTable\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12J\n\x0bGetPredSucc\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12@\n\x08LookUpID\x12\x13.nodeservice.NodeId\x1a\x1d.nodeservice.JoinNodeResponse\"\x00\x12;\n\x0b\x43onnectPeer\x12\x14.nodeservice.Address\x1a\x14.nodeservice.Address\"\x00\x12H\n\x11UpdateFingerTable\x12\x1b.nodeservice.DefaultRequest\x1a\x14.nodeservice.Address\"\x00\x12L\n\x0eUpdatePredSucc\x12\".nodeservice.UpdatePredSuccRequest\x1a\x14.nodeservice.Address\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12node_service.proto\x12\x0bnodeservice\"\x10\n\x0e\x44\x65\x66\x61ultRequest\"\x14\n\x06NodeId\x12\n\n\x02id\x18\x01 \x01(\x05\"\"\n\x0fResponseMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"R\n\x15UpdatePredSuccRequest\x12\x12\n\nidentifier\x18\x01 \x01(\x05\x12%\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x14.nodeservice.Address\"M\n\x10JoinNodeResponse\x12\x12\n\nidentifier\x18\x01 \x01(\x05\x12%\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x14.nodeservice.Address\"#\n\x07\x41\x64\x64ress\x12\n\n\x02ip\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"%\n\x11SearchFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"%\n\x08\x46ileInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03uri\x18\x02 \x01(\t\":\n\x12SearchFileResponse\x12$\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x15.nodeservice.FileInfo\"#\n\x0f\x44ownloadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"#\n\x10\x44ownloadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\rUploadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"!\n\x0eUploadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\xa2\x05\n\x0bNodeService\x12\x43\n\x0bJoinNetwork\x12\x14.nodeservice.Address\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12K\n\x0cLeaveNetwork\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12M\n\x0eGetFingerTable\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12J\n\x0bGetPredSucc\x12\x1b.nodeservice.DefaultRequest\x1a\x1c.nodeservice.ResponseMessage\"\x00\x12@\n\x08LookUpID\x12\x13.nodeservice.NodeId\x1a\x1d.nodeservice.JoinNodeResponse\"\x00\x12;\n\x0b\x43onnectPeer\x12\x14.nodeservice.Address\x1a\x14.nodeservice.Address\"\x00\x12H\n\x11UpdateFingerTable\x12\x1b.nodeservice.DefaultRequest\x1a\x14.nodeservice.Address\"\x00\x12L\n\x0eUpdatePredSucc\x12\".nodeservice.UpdatePredSuccRequest\x1a\x14.nodeservice.Address\"\x00\x12O\n\nSearchFile\x12\x1e.nodeservice.SearchFileRequest\x1a\x1f.nodeservice.SearchFileResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,6 +43,20 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_JOINNODERESPONSE']._serialized_end=272
   _globals['_ADDRESS']._serialized_start=274
   _globals['_ADDRESS']._serialized_end=309
-  _globals['_NODESERVICE']._serialized_start=312
-  _globals['_NODESERVICE']._serialized_end=905
+  _globals['_SEARCHFILEREQUEST']._serialized_start=311
+  _globals['_SEARCHFILEREQUEST']._serialized_end=348
+  _globals['_FILEINFO']._serialized_start=350
+  _globals['_FILEINFO']._serialized_end=387
+  _globals['_SEARCHFILERESPONSE']._serialized_start=389
+  _globals['_SEARCHFILERESPONSE']._serialized_end=447
+  _globals['_DOWNLOADREQUEST']._serialized_start=449
+  _globals['_DOWNLOADREQUEST']._serialized_end=484
+  _globals['_DOWNLOADRESPONSE']._serialized_start=486
+  _globals['_DOWNLOADRESPONSE']._serialized_end=521
+  _globals['_UPLOADREQUEST']._serialized_start=523
+  _globals['_UPLOADREQUEST']._serialized_end=556
+  _globals['_UPLOADRESPONSE']._serialized_start=558
+  _globals['_UPLOADRESPONSE']._serialized_end=591
+  _globals['_NODESERVICE']._serialized_start=594
+  _globals['_NODESERVICE']._serialized_end=1268
 # @@protoc_insertion_point(module_scope)

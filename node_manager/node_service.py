@@ -97,6 +97,14 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
     def GetPredSucc(self, request, context):
         return {"My ID": self.node.id, "Predecessor": self.node.predID, "Successor": self.node.succID}
         
+    def SearchFile(self, request, context):
+        try:
+            search_term = request.filename
+            files = self.node.searchFile(search_term)
+            return node_service_pb2.SearchFileResponse(files=files)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return node_service_pb2.SearchFileResponse()
 
 class Node:
     def __init__(self, ip, port, directory=None, seed_url=None):
@@ -263,10 +271,80 @@ class Node:
         print("Printing F Table")
         for key, value in self.fingerTable.items():
             print("KeyID:", key, "Value", value)
+    
+    def searchFileInNetwork(self, search_term, start_node):
+        current_node = start_node
+        visited_nodes = set()
+
+        while True:
+            if (current_node[0], current_node[1]) in visited_nodes:
+                break
+            visited_nodes.add((current_node[0], current_node[1]))
+
+            try:
+                with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
+                    stub = node_service_pb2_grpc.NodeServiceStub(channel)
+                    request = node_service_pb2.SearchFileRequest(filename=search_term)
+                    response = stub.SearchFile(request)
+
+                    if response.files:
+                        # Convert file_service_pb2.FileInfo to node_service_pb2.FileInfo
+                        converted_files = []
+                        for file in response.files:
+                            converted_file = node_service_pb2.FileInfo(
+                                name=file.name,
+                                uri=file.uri
+                            )
+                            converted_files.append(converted_file)
+                        return converted_files
+
+                    # Get the next node
+                    next_node_request = node_service_pb2.NodeId(id=self.succID)
+                    next_node_response = stub.LookUpID(next_node_request)
+                    next_node = (next_node_response.address.ip, next_node_response.address.port)
+                    current_node = next_node
+
+            except grpc.RpcError as e:
+                print(f"Error searching node {current_node}: {e}")
+                return []
+
+        return []  # If we've traversed the entire network without finding matches
+
+    def searchFile(self, search_term):
+        files = []
+        if self.directory:
+            for filename in os.listdir(self.directory):
+                if search_term.lower() in filename.lower():
+                    file_info = node_service_pb2.FileInfo(
+                        name=filename,
+                        uri=f"http://{self.ip}:{self.port}/files/{filename}"
+                    )
+                    files.append(file_info)
+        return files
+
+    def dummyUpload(self, filename, target_node):
+        try:
+            with grpc.insecure_channel(f'{target_node[0]}:{target_node[1]}') as channel:
+                stub = file_service_pb2_grpc.FileServiceStub(channel)
+                request = file_service_pb2.UploadRequest(filename=filename)
+                response = stub.DummyUpload(request)
+                print(f"Upload response: {response.message}")
+        except grpc.RpcError as e:
+            print(f"Error in dummy upload: {e}")
+
+    def dummyDownload(self, filename):
+        try:
+            with grpc.insecure_channel(f'{self.ip}:{self.port}') as channel:
+                stub = file_service_pb2_grpc.FileServiceStub(channel)
+                request = file_service_pb2.DownloadRequest(filename=filename)
+                response = stub.DummyDownload(request)
+                print(f"Download response: {response.message}")
+        except grpc.RpcError as e:
+            print(f"Error in dummy download: {e}")
 
     def printMenu(self):
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor\nf. Terminar proceso")
+        print("5. Print Finger Table\n6. Print my predecessor and successor\n7. Search File\nf. Terminar proceso")
 
     def asAClientThread(self):
         self.printMenu()
@@ -278,17 +356,26 @@ class Node:
         elif userChoice == "2":
             self.leaveNetwork()
         elif userChoice == "3":
-            filename = input("Enter filename: ")
+            filename = input("Enter filename to upload: ")
             fileID = getHash(filename)
             recvIPport = self.getSuccessor(self.succ, fileID)
-            self.uploadFile(filename, recvIPport, True)
+            self.dummyUpload(filename, recvIPport)
         elif userChoice == "4":
-            filename = input("Enter filename: ")
-            self.downloadFile(filename)
+            filename = input("Enter filename to download: ")
+            self.dummyDownload(filename)
         elif userChoice == "5":
             self.printFTable()
         elif userChoice == "6":
             print("My ID:", self.id, "Predecessor:", self.predID, "Successor:", self.succID)
+        elif userChoice == "7":  # Opción para buscar archivos
+            search_term = input("Enter search term: ")
+            files = self.searchFileInNetwork(search_term, self.address)
+            if files:
+                print("Files found:")
+                for file in files:
+                    print(f"Name: {file.name}, URI: {file.uri}")
+            else:
+                print("No files found.")
         elif userChoice == "f":
             global end
             end = True
