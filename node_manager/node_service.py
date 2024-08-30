@@ -28,7 +28,7 @@ class FileServicer(file_service_pb2_grpc.FileServiceServicer):
         files = [
             file_service_pb2.FileInfo(
                 name=filename,
-                uri=f"http://{self.node.ip}:{self.node.port}/files/{filename}"
+                uri=f"http://{self.node.ip}:{self.node.port}/files/{os.path.basename(self.node.directory)}/{filename}"
             )
             for filename in os.listdir(self.node.directory)
             if os.path.isfile(os.path.join(self.node.directory, filename))
@@ -107,13 +107,12 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
         except Exception as e:
             print(f"Error occurred: {e}")
             return node_service_pb2.SearchFileResponse()
-
 class Node:
     def __init__(self, ip, port, directory=None, seed_url=None):
         self.filenameList = []
         self.ip = ip
         self.port = port
-        self.directory = directory
+        self.directory = self.get_directory_for_port(port)
         self.address = (ip, port)
         self.id = getHash(ip + ":" + str(port))
         self.pred = (ip, port)
@@ -123,6 +122,17 @@ class Node:
         self.fingerTable = OrderedDict()
         self.seed_url = seed_url
         self.lock = threading.Lock()
+
+    def get_directory_for_port(self, port):
+        if 2000 <= port <= 2999:
+            return "files/nodos2000"
+        elif 3000 <= port <= 3999:
+            return "files/nodos3000"
+        elif port >= 4000:
+            return "files/nodos4000"
+        else:
+            return "files/default"  # Default directory for any other port range
+
 
     def getSuccessorPetition(self, serverAddress, keyID):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
@@ -280,44 +290,6 @@ class Node:
             for key, value in self.fingerTable.items():
                 print("KeyID:", key, "Value", value)
     
-    def searchFileInNetwork(self, search_term, start_node):
-        with self.lock:
-            current_node = start_node
-            visited_nodes = set()
-
-            while True:
-                if (current_node[0], current_node[1]) in visited_nodes:
-                    break
-                visited_nodes.add((current_node[0], current_node[1]))
-
-                try:
-                    with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
-                        stub = node_service_pb2_grpc.NodeServiceStub(channel)
-                        request = node_service_pb2.SearchFileRequest(filename=search_term)
-                        response = stub.SearchFile(request)
-
-                        if response.files:
-                            # Convert file_service_pb2.FileInfo to node_service_pb2.FileInfo
-                            converted_files = []
-                            for file in response.files:
-                                converted_file = node_service_pb2.FileInfo(
-                                    name=file.name,
-                                    uri=file.uri
-                                )
-                                converted_files.append(converted_file)
-                            return converted_files
-
-                        # Get the next node
-                        next_node_request = node_service_pb2.NodeId(id=self.succID)
-                        next_node_response = stub.LookUpID(next_node_request)
-                        next_node = (next_node_response.address.ip, next_node_response.address.port)
-                        current_node = next_node
-
-                except grpc.RpcError as e:
-                    print(f"Error searching node {current_node}: {e}")
-                    return []
-
-            return []  # If we've traversed the entire network without finding matches
 
     def searchFile(self, search_term):
         files = []
@@ -326,10 +298,47 @@ class Node:
                 if search_term.lower() in filename.lower():
                     file_info = node_service_pb2.FileInfo(
                         name=filename,
-                        uri=f"http://{self.ip}:{self.port}/files/{filename}"
+                        uri=f"http://{self.ip}:{self.port}/files/{os.path.basename(self.directory)}/{filename}"
                     )
                     files.append(file_info)
         return files
+
+    def searchFileInNetwork(self, search_term):
+        with self.lock:
+            current_node = self.address
+            visited_nodes = set()
+
+            while True:
+                if current_node in visited_nodes:
+                    break
+                visited_nodes.add(current_node)
+
+                try:
+                    with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
+                        stub = node_service_pb2_grpc.NodeServiceStub(channel)
+                        request = node_service_pb2.SearchFileRequest(filename=search_term)
+                        response = stub.SearchFile(request)
+
+                        if response.files:
+                            return response.files
+
+                        # Get the next node
+                        next_node_request = node_service_pb2.NodeId(id=self.succID)
+                        next_node_response = stub.LookUpID(next_node_request)
+                        next_node = (next_node_response.address.ip, next_node_response.address.port)
+                        
+                        if next_node == self.address:
+                            break  # We've gone around the entire network
+                        
+                        current_node = next_node
+
+                except grpc.RpcError as e:
+                    print(f"Error searching node {current_node}: {e}")
+                    # Try with the next known node
+                    current_node = self.succ
+
+            return []  # If we've searched the entire network without finding matches
+
 
     def dummyUpload(self, filename, target_node):
         try:
@@ -378,7 +387,7 @@ class Node:
             print("My ID:", self.id, "Predecessor:", self.predID, "Successor:", self.succID)
         elif userChoice == "7":  # Opción para buscar archivos
             search_term = input("Enter search term: ")
-            files = self.searchFileInNetwork(search_term, self.address)
+            files = self.searchFileInNetwork(search_term)
             if files:
                 print("Files found:")
                 for file in files:

@@ -14,6 +14,7 @@ service NodeService{
     rpc SearchFile (SearchFileRequest) returns (SearchFileResponse) {}
 }
 
+
 message DefaultRequest{}
 message NodeId{
     int32 id = 1; 
@@ -40,24 +41,16 @@ message Address{
 
 // Nuevos mensajes para búsqueda de archivos
 message SearchFileRequest {
-    string filename = 1;
-}
-
-message FileInfo {
-    string name = 1;
-    string uri = 2;
-}
-
-message SearchFileResponse {
-    repeated FileInfo files = 1;
-}
-
-message DownloadRequest {
   string filename = 1;
 }
 
-message DownloadResponse {
-  string message = 1;
+message SearchFileResponse {
+  repeated FileInfo files = 1;
+}
+
+message FileInfo {
+  string name = 1;
+  string uri = 2;
 }
 
 message UploadRequest {
