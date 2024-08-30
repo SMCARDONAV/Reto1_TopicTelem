@@ -1,6 +1,7 @@
 import os
 from collections import OrderedDict
 from concurrent import futures
+import threading
 import time
 
 import grpc
@@ -121,6 +122,7 @@ class Node:
         self.succID = self.id
         self.fingerTable = OrderedDict()
         self.seed_url = seed_url
+        self.lock = threading.Lock()
 
     def getSuccessorPetition(self, serverAddress, keyID):
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
