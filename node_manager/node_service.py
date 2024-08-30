@@ -23,7 +23,7 @@ class FileServicer(file_service_pb2_grpc.FileServiceServicer):
     def __init__(self, node):
         self.node = node
 
-    def ListFiles(self, request, context):
+    def ListFiles(self, request, context):  
         files = [
             file_service_pb2.FileInfo(
                 name=filename,
@@ -81,14 +81,15 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
         return self.node.printFTable()
     
     def UpdatePredSucc(self, request, context):
-        if request.identifier == 1:
-            self.node.updateSucc(request)
-            ip, port = self.node.succ
-            return node_service_pb2.Address(ip=ip, port=port)
-        else:
-            self.node.updatePred(request)
-            ip, port = self.node.pred
-            return node_service_pb2.Address(ip=ip, port=port)
+        with self.lock:
+            if request.identifier == 1:
+                self.node.updateSucc(request)
+                ip, port = self.node.succ
+                return node_service_pb2.Address(ip=ip, port=port)
+            else:
+                self.node.updatePred(request)
+                ip, port = self.node.pred
+                return node_service_pb2.Address(ip=ip, port=port)
 
     def UpdateFingerTable(self, request, context):
         self.node.updateFTable()
@@ -165,46 +166,48 @@ class Node:
         return recvIPPort
 
     def sendJoinRequest(self, ip, port):
-        try:
-            recvIPPort = self.getSuccessor((ip, port), self.id)
-            response = self.getConnectPeerPetition(recvIPPort, self.address)
-            self.pred = response
-            self.predID = getHash(self.pred[0] + ":" + str(self.pred[1]))
-            self.succ = recvIPPort
-            self.succID = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
-            response = self.UpdatePredSuccPetition(self.pred, 1, self.address)
-            print("Nodo unido correctamente")
-        except grpc.RpcError as e:
-            print(f"Request error: {e}")
-            return "Request error", 500
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return "Unexpected error", 500
+        with self.lock:
+            try:
+                recvIPPort = self.getSuccessor((ip, port), self.id)
+                response = self.getConnectPeerPetition(recvIPPort, self.address)
+                self.pred = response
+                self.predID = getHash(self.pred[0] + ":" + str(self.pred[1]))
+                self.succ = recvIPPort
+                self.succID = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
+                response = self.UpdatePredSuccPetition(self.pred, 1, self.address)
+                print("Nodo unido correctamente")
+            except grpc.RpcError as e:
+                print(f"Request error: {e}")
+                return "Request error", 500
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+                return "Unexpected error", 500
         
     def lookupID(self, keyID):
-        sDataList = []
-        if self.id == keyID:
-            sDataList = [0, self.address]
-        elif self.succID == self.id:
-            sDataList = [0, self.address]
-        elif self.id > keyID:
-            if self.predID < keyID:
+        with self.lock:
+            sDataList = []
+            if self.id == keyID:
                 sDataList = [0, self.address]
-            elif self.predID > self.id:
+            elif self.succID == self.id:
                 sDataList = [0, self.address]
+            elif self.id > keyID:
+                if self.predID < keyID:
+                    sDataList = [0, self.address]
+                elif self.predID > self.id:
+                    sDataList = [0, self.address]
+                else:
+                    sDataList = [1, self.pred]
             else:
-                sDataList = [1, self.pred]
-        else:
-            if self.id > self.succID:
-                sDataList = [0, self.succ]
-            else:
-                value = ()
-                for key, value in self.fingerTable.items():
-                    if key >= keyID:
-                        break
-                value = self.succ
-                sDataList = [1, value]
-        return sDataList
+                if self.id > self.succID:
+                    sDataList = [0, self.succ]
+                else:
+                    value = ()
+                    for key, value in self.fingerTable.items():
+                        if key >= keyID:
+                            break
+                    value = self.succ
+                    sDataList = [1, value]
+            return sDataList
     
     def updateFTable(self):
         for i in range(MAX_BITS):
@@ -230,30 +233,32 @@ class Node:
                 print(f"Error en la conexión al actualizar otras tablas de finger: {e}")
     
     def joinNode(self, peerIPport):
-        if peerIPport:
-            peerID = getHash(peerIPport.ip + ":" + str(peerIPport.port))
-            oldPred = self.pred
-            self.pred = peerIPport
-            self.predID = peerID
-            sDataList = [oldPred]
-            time.sleep(0.1)
-            self.updateFTable()
-            self.updateOtherFTables()
-            return_value = sDataList[0]
-            print(return_value)
-            return return_value
+        with self.lock:
+            if peerIPport:
+                peerID = getHash(peerIPport.ip + ":" + str(peerIPport.port))
+                oldPred = self.pred
+                self.pred = peerIPport
+                self.predID = peerID
+                sDataList = [oldPred]
+                time.sleep(0.1)
+                self.updateFTable()
+                self.updateOtherFTables()
+                return_value = sDataList[0]
+                print(return_value)
+                return return_value
            
         
     def leaveNetwork(self):
-        self.UpdatePredSuccPetition(self.succ, 0, self.pred)
-        self.UpdatePredSuccPetition(self.pred, 1, self.succ)
-        self.updateOtherFTables()
-        self.pred = (self.ip, self.port)
-        self.predID = self.id
-        self.succ = (self.ip, self.port)
-        self.succID = self.id
-        self.fingerTable.clear()
-        return self.address, "ha salido de la red"
+        with self.lock:
+            self.UpdatePredSuccPetition(self.succ, 0, self.pred)
+            self.UpdatePredSuccPetition(self.pred, 1, self.succ)
+            self.updateOtherFTables()
+            self.pred = (self.ip, self.port)
+            self.predID = self.id
+            self.succ = (self.ip, self.port)
+            self.succID = self.id
+            self.fingerTable.clear()
+            return self.address, "ha salido de la red"
     
     def updateSucc(self, rDataList):
         newSucc = rDataList.address
@@ -268,47 +273,49 @@ class Node:
         self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
     
     def printFTable(self):
-        print("Printing F Table")
-        for key, value in self.fingerTable.items():
-            print("KeyID:", key, "Value", value)
+        with self.lock:
+            print("Printing F Table")
+            for key, value in self.fingerTable.items():
+                print("KeyID:", key, "Value", value)
     
     def searchFileInNetwork(self, search_term, start_node):
-        current_node = start_node
-        visited_nodes = set()
+        with self.lock:
+            current_node = start_node
+            visited_nodes = set()
 
-        while True:
-            if (current_node[0], current_node[1]) in visited_nodes:
-                break
-            visited_nodes.add((current_node[0], current_node[1]))
+            while True:
+                if (current_node[0], current_node[1]) in visited_nodes:
+                    break
+                visited_nodes.add((current_node[0], current_node[1]))
 
-            try:
-                with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
-                    stub = node_service_pb2_grpc.NodeServiceStub(channel)
-                    request = node_service_pb2.SearchFileRequest(filename=search_term)
-                    response = stub.SearchFile(request)
+                try:
+                    with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
+                        stub = node_service_pb2_grpc.NodeServiceStub(channel)
+                        request = node_service_pb2.SearchFileRequest(filename=search_term)
+                        response = stub.SearchFile(request)
 
-                    if response.files:
-                        # Convert file_service_pb2.FileInfo to node_service_pb2.FileInfo
-                        converted_files = []
-                        for file in response.files:
-                            converted_file = node_service_pb2.FileInfo(
-                                name=file.name,
-                                uri=file.uri
-                            )
-                            converted_files.append(converted_file)
-                        return converted_files
+                        if response.files:
+                            # Convert file_service_pb2.FileInfo to node_service_pb2.FileInfo
+                            converted_files = []
+                            for file in response.files:
+                                converted_file = node_service_pb2.FileInfo(
+                                    name=file.name,
+                                    uri=file.uri
+                                )
+                                converted_files.append(converted_file)
+                            return converted_files
 
-                    # Get the next node
-                    next_node_request = node_service_pb2.NodeId(id=self.succID)
-                    next_node_response = stub.LookUpID(next_node_request)
-                    next_node = (next_node_response.address.ip, next_node_response.address.port)
-                    current_node = next_node
+                        # Get the next node
+                        next_node_request = node_service_pb2.NodeId(id=self.succID)
+                        next_node_response = stub.LookUpID(next_node_request)
+                        next_node = (next_node_response.address.ip, next_node_response.address.port)
+                        current_node = next_node
 
-            except grpc.RpcError as e:
-                print(f"Error searching node {current_node}: {e}")
-                return []
+                except grpc.RpcError as e:
+                    print(f"Error searching node {current_node}: {e}")
+                    return []
 
-        return []  # If we've traversed the entire network without finding matches
+            return []  # If we've traversed the entire network without finding matches
 
     def searchFile(self, search_term):
         files = []
