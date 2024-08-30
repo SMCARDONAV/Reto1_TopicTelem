@@ -94,7 +94,8 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
 
     def UpdateFingerTable(self, request, context):
         self.node.updateFTable()
-        return node_service_pb2.Address(ip=self.node.succ[0], port=self.node.succ[1])
+        ip, port = self.node.succ
+        return node_service_pb2.Address(ip=ip, port=port)
     
     def GetPredSucc(self, request, context):
         return {"My ID": self.node.id, "Predecessor": self.node.predID, "Successor": self.node.succID}
@@ -151,7 +152,10 @@ class Node:
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
             stub = node_service_pb2_grpc.NodeServiceStub(channel)
             request = node_service_pb2.DefaultRequest()
+            print("request update finger table")
             response = stub.UpdateFingerTable(request)
+            print("response update finger table")
+            print(response)
             return (response.ip, response.port)        
 
     def getSuccessor(self, address, keyID):
@@ -224,6 +228,8 @@ class Node:
     def updateOtherFTables(self):
         here = self.succ
         while True:
+            print("hereeee")
+            print(here)
             if here == self.address:
                 break
             try:
