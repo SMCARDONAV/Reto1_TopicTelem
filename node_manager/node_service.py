@@ -81,16 +81,15 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
     def GetFingerTable(self, request, context):
         return self.node.printFTable()
     
-    def UpdatePredSucc(self, request, context):
-        with self.lock:
-            if request.identifier == 1:
-                self.node.updateSucc(request)
-                ip, port = self.node.succ
-                return node_service_pb2.Address(ip=ip, port=port)
-            else:
-                self.node.updatePred(request)
-                ip, port = self.node.pred
-                return node_service_pb2.Address(ip=ip, port=port)
+    def UpdatePredSucc(self, request, context):       
+        if request.identifier == 1:
+            self.node.updateSucc(request)
+            ip, port = self.node.succ
+            return node_service_pb2.Address(ip=ip, port=port)
+        else:
+            self.node.updatePred(request)
+            ip, port = self.node.pred
+            return node_service_pb2.Address(ip=ip, port=port)
 
     def UpdateFingerTable(self, request, context):
         self.node.updateFTable()
@@ -243,6 +242,7 @@ class Node:
             if here == self.address:
                 break
             try:
+                print("try to send a update finger table pertition")
                 response = self.UpdateFingerTablePetition(here)         
                 here = response
                 if here == self.succ:
@@ -279,16 +279,18 @@ class Node:
             return self.address, "ha salido de la red"
     
     def updateSucc(self, rDataList):
-        newSucc = rDataList.address
-        newSucc = (newSucc.ip, newSucc.port)
-        self.succ = newSucc
-        self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
+        with self.lock:
+            newSucc = rDataList.address
+            newSucc = (newSucc.ip, newSucc.port)
+            self.succ = newSucc
+            self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
 
     def updatePred(self, rDataList):
-        newPred = rDataList.address
-        newPred = (newPred.ip, newPred.port)
-        self.pred = newPred
-        self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
+        with self.lock:
+            newPred = rDataList.address
+            newPred = (newPred.ip, newPred.port)
+            self.pred = newPred
+            self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
     
     def printFTable(self):
         with self.lock:
