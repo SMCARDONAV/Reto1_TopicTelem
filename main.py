@@ -14,8 +14,8 @@ def load_config():
 
 def create_and_run_node(ip, port):
     config = load_config()
-    config['ip'] = ip
-    config['port'] = port
+    # config['ip'] = ip
+    # config['port'] = port
 
     node = node_service.create_node(
         config['ip'], 

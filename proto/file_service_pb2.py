@@ -24,27 +24,27 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x66ile_service.proto\x12\x0b\x66ileservice\"\x12\n\x10ListFilesRequest\"9\n\x11ListFilesResponse\x12$\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x15.fileservice.FileInfo\"%\n\x08\x46ileInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03uri\x18\x02 \x01(\t\"#\n\x0f\x44ownloadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"#\n\x10\x44ownloadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\rUploadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"!\n\x0eUploadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\xf5\x01\n\x0b\x46ileService\x12L\n\tListFiles\x12\x1d.fileservice.ListFilesRequest\x1a\x1e.fileservice.ListFilesResponse\"\x00\x12N\n\rDummyDownload\x12\x1c.fileservice.DownloadRequest\x1a\x1d.fileservice.DownloadResponse\"\x00\x12H\n\x0b\x44ummyUpload\x12\x1a.fileservice.UploadRequest\x1a\x1b.fileservice.UploadResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x66ile_service.proto\x12\x0b\x66ileservice\"\x07\n\x05\x45mpty\"9\n\x11ListFilesResponse\x12$\n\x05\x66iles\x18\x01 \x03(\x0b\x32\x15.fileservice.FileInfo\"%\n\x08\x46ileInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03uri\x18\x02 \x01(\t\"#\n\x0f\x44ownloadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"#\n\x10\x44ownloadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\rUploadRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"!\n\x0eUploadResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\xe4\x01\n\x0b\x46ileService\x12?\n\tListFiles\x12\x12.fileservice.Empty\x1a\x1e.fileservice.ListFilesResponse\x12L\n\rDummyDownload\x12\x1c.fileservice.DownloadRequest\x1a\x1d.fileservice.DownloadResponse\x12\x46\n\x0b\x44ummyUpload\x12\x1a.fileservice.UploadRequest\x1a\x1b.fileservice.UploadResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'file_service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_LISTFILESREQUEST']._serialized_start=35
-  _globals['_LISTFILESREQUEST']._serialized_end=53
-  _globals['_LISTFILESRESPONSE']._serialized_start=55
-  _globals['_LISTFILESRESPONSE']._serialized_end=112
-  _globals['_FILEINFO']._serialized_start=114
-  _globals['_FILEINFO']._serialized_end=151
-  _globals['_DOWNLOADREQUEST']._serialized_start=153
-  _globals['_DOWNLOADREQUEST']._serialized_end=188
-  _globals['_DOWNLOADRESPONSE']._serialized_start=190
-  _globals['_DOWNLOADRESPONSE']._serialized_end=225
-  _globals['_UPLOADREQUEST']._serialized_start=227
-  _globals['_UPLOADREQUEST']._serialized_end=260
-  _globals['_UPLOADRESPONSE']._serialized_start=262
-  _globals['_UPLOADRESPONSE']._serialized_end=295
-  _globals['_FILESERVICE']._serialized_start=298
-  _globals['_FILESERVICE']._serialized_end=543
+  _globals['_EMPTY']._serialized_start=35
+  _globals['_EMPTY']._serialized_end=42
+  _globals['_LISTFILESRESPONSE']._serialized_start=44
+  _globals['_LISTFILESRESPONSE']._serialized_end=101
+  _globals['_FILEINFO']._serialized_start=103
+  _globals['_FILEINFO']._serialized_end=140
+  _globals['_DOWNLOADREQUEST']._serialized_start=142
+  _globals['_DOWNLOADREQUEST']._serialized_end=177
+  _globals['_DOWNLOADRESPONSE']._serialized_start=179
+  _globals['_DOWNLOADRESPONSE']._serialized_end=214
+  _globals['_UPLOADREQUEST']._serialized_start=216
+  _globals['_UPLOADREQUEST']._serialized_end=249
+  _globals['_UPLOADRESPONSE']._serialized_start=251
+  _globals['_UPLOADRESPONSE']._serialized_end=284
+  _globals['_FILESERVICE']._serialized_start=287
+  _globals['_FILESERVICE']._serialized_end=515
 # @@protoc_insertion_point(module_scope)
