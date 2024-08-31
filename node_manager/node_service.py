@@ -121,7 +121,7 @@ class Node:
         self.succID = self.id
         self.fingerTable = OrderedDict()
         self.seed_url = seed_url
-        self.lock = threading.Lock()
+        # self.lock = threading.Lock()
 
     def get_directory_for_port(self, port):
         if 2000 <= port <= 2999:
@@ -181,7 +181,7 @@ class Node:
         return recvIPPort
 
     def sendJoinRequest(self, ip, port):
-        with self.lock:
+        # with self.lock:
             try:
                 recvIPPort = self.getSuccessor((ip, port), self.id)
                 response = self.getConnectPeerPetition(recvIPPort, self.address)
@@ -199,7 +199,7 @@ class Node:
                 return "Unexpected error", 500
         
     def lookupID(self, keyID):
-        with self.lock:
+        # with self.lock:
             sDataList = []
             if self.id == keyID:
                 sDataList = [0, self.address]
@@ -225,14 +225,15 @@ class Node:
             return sDataList
     
     def updateFTable(self):
-        for i in range(MAX_BITS):
-            entryId = (self.id + (2 ** i)) % MAX_NODES
-            if self.succ == self.address:
-                self.fingerTable[entryId] = (self.id, self.address)
-                continue
-            recvIPPort = self.getSuccessor(self.succ, entryId)
-            recvId = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
-            self.fingerTable[entryId] = (recvId, recvIPPort)
+        # with self.lock:
+            for i in range(MAX_BITS):
+                entryId = (self.id + (2 ** i)) % MAX_NODES
+                if self.succ == self.address:
+                    self.fingerTable[entryId] = (self.id, self.address)
+                    continue
+                recvIPPort = self.getSuccessor(self.succ, entryId)
+                recvId = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
+                self.fingerTable[entryId] = (recvId, recvIPPort)
 
     def updateOtherFTables(self):
         here = self.succ
@@ -251,7 +252,7 @@ class Node:
                 print(f"Error en la conexión al actualizar otras tablas de finger: {e}")
     
     def joinNode(self, peerIPport):
-        with self.lock:
+        # with self.lock:
             if peerIPport:
                 peerID = getHash(peerIPport.ip + ":" + str(peerIPport.port))
                 oldPred = self.pred
@@ -267,7 +268,7 @@ class Node:
            
         
     def leaveNetwork(self):
-        with self.lock:
+        # with self.lock:
             self.UpdatePredSuccPetition(self.succ, 0, self.pred)
             self.UpdatePredSuccPetition(self.pred, 1, self.succ)
             self.updateOtherFTables()
@@ -279,21 +280,21 @@ class Node:
             return self.address, "ha salido de la red"
     
     def updateSucc(self, rDataList):
-        with self.lock:
+        # with self.lock:
             newSucc = rDataList.address
             newSucc = (newSucc.ip, newSucc.port)
             self.succ = newSucc
             self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
 
     def updatePred(self, rDataList):
-        with self.lock:
+        # with self.lock:
             newPred = rDataList.address
             newPred = (newPred.ip, newPred.port)
             self.pred = newPred
             self.predID = getHash(newPred[0] + ":" + str(newPred[1]))
     
     def printFTable(self):
-        with self.lock:
+        # with self.lock:
             print("Printing F Table")
             for key, value in self.fingerTable.items():
                 print("KeyID:", key, "Value", value)
@@ -312,7 +313,7 @@ class Node:
         return files
 
     def searchFileInNetwork(self, search_term):
-        with self.lock:
+        # with self.lock:
             current_node = self.address
             visited_nodes = set()
 
