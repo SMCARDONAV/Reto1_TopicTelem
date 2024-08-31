@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto de los archivos de la aplicación al contenedor
 COPY . .
 
-# Expone el puerto que usará la aplicación
-EXPOSE 8000
+# # Expone el puerto que usará la aplicación
+# EXPOSE 8000
 
 # Define el comando por defecto para ejecutar la aplicación
 CMD ["python", "main.py"]
