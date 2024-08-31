@@ -34,7 +34,7 @@ class FileServicer(file_service_pb2_grpc.FileServiceServicer):
             if os.path.isfile(os.path.join(self.node.directory, filename))
         ]
         return file_service_pb2.ListFilesResponse(files=files)
-    
+
     def DummyDownload(self, request, context):
         return file_service_pb2.DownloadResponse(message=f"Dummy download of {request.filename}")
 
@@ -123,15 +123,18 @@ class Node:
         self.seed_url = seed_url
         # self.lock = threading.Lock()
 
+    # def get_directory_for_port(self, port):
+    #     if 2000 <= port <= 2999:
+    #         return "files/nodos2000"
+    #     elif 3000 <= port <= 3999:
+    #         return "files/nodos3000"
+    #     elif port >= 4000:
+    #         return "files/nodos4000"
+    #     else:
+    #         return "files/default"  # Default directory for any other port range
+
     def get_directory_for_port(self, port):
-        if 2000 <= port <= 2999:
-            return "files/nodos2000"
-        elif 3000 <= port <= 3999:
-            return "files/nodos3000"
-        elif port >= 4000:
-            return "files/nodos4000"
-        else:
-            return "files/default"  # Default directory for any other port range
+        return "files"  # All nodes will use the same directory
 
 
     def getSuccessorPetition(self, serverAddress, keyID):
@@ -371,7 +374,8 @@ class Node:
 
     def printMenu(self):
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor\n7. Search File\nf. Terminar proceso")
+        print("5. Print Finger Table\n6. Print my predecessor and successor\n7. Search File")
+        print("8. List Files on Each Node\nf. Terminar proceso")
 
     def asAClientThread(self):
         self.printMenu()
@@ -403,11 +407,25 @@ class Node:
                     print(f"Name: {file.name}, URI: {file.uri}")
             else:
                 print("No files found.")
+        elif userChoice == "8":
+            self.listFiles()
         elif userChoice == "f":
             global end
             end = True
 
-    
+    def listFiles(self):
+        try:
+            with grpc.insecure_channel(f'{self.ip}:{self.port}') as channel:
+                stub = file_service_pb2_grpc.FileServiceStub(channel)
+                request = file_service_pb2.Empty()
+                response = stub.ListFiles(request)
+                
+                print("Files in the current node:")
+                for file in response.files:
+                    print(f"Name: {file.name}, URI: {file.uri}")
+        except grpc.RpcError as e:
+            print(f"Error in listFiles: {e}")
+
     def start(self):
         grpc_port = self.port
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

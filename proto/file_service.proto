@@ -3,34 +3,34 @@ syntax = "proto3";
 package fileservice;
 
 service FileService {
-  rpc ListFiles (ListFilesRequest) returns (ListFilesResponse) {}
-  rpc DummyDownload (DownloadRequest) returns (DownloadResponse) {}
-  rpc DummyUpload (UploadRequest) returns (UploadResponse) {}
+    rpc ListFiles (Empty) returns (ListFilesResponse);
+    rpc DummyDownload (DownloadRequest) returns (DownloadResponse);
+    rpc DummyUpload (UploadRequest) returns (UploadResponse);
 }
 
-message ListFilesRequest {}
+message Empty {}
 
 message ListFilesResponse {
-  repeated FileInfo files = 1;
+    repeated FileInfo files = 1;
 }
 
 message FileInfo {
-  string name = 1;
-  string uri = 2;
+    string name = 1;
+    string uri = 2;
 }
 
 message DownloadRequest {
-  string filename = 1;
+    string filename = 1;
 }
 
 message DownloadResponse {
-  string message = 1;
+    string message = 1;
 }
 
 message UploadRequest {
-  string filename = 1;
+    string filename = 1;
 }
 
 message UploadResponse {
-  string message = 1;
+    string message = 1;
 }

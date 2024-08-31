@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 import warnings
+
 from . import file_service_pb2 as file__service__pb2
 
 GRPC_GENERATED_VERSION = '1.66.0'
@@ -35,7 +36,7 @@ class FileServiceStub(object):
         """
         self.ListFiles = channel.unary_unary(
                 '/fileservice.FileService/ListFiles',
-                request_serializer=file__service__pb2.ListFilesRequest.SerializeToString,
+                request_serializer=file__service__pb2.Empty.SerializeToString,
                 response_deserializer=file__service__pb2.ListFilesResponse.FromString,
                 _registered_method=True)
         self.DummyDownload = channel.unary_unary(
@@ -76,7 +77,7 @@ def add_FileServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ListFiles': grpc.unary_unary_rpc_method_handler(
                     servicer.ListFiles,
-                    request_deserializer=file__service__pb2.ListFilesRequest.FromString,
+                    request_deserializer=file__service__pb2.Empty.FromString,
                     response_serializer=file__service__pb2.ListFilesResponse.SerializeToString,
             ),
             'DummyDownload': grpc.unary_unary_rpc_method_handler(
@@ -115,7 +116,7 @@ class FileService(object):
             request,
             target,
             '/fileservice.FileService/ListFiles',
-            file__service__pb2.ListFilesRequest.SerializeToString,
+            file__service__pb2.Empty.SerializeToString,
             file__service__pb2.ListFilesResponse.FromString,
             options,
             channel_credentials,
