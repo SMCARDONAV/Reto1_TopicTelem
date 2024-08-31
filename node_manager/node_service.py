@@ -3,6 +3,7 @@ from collections import OrderedDict
 from concurrent import futures
 import threading
 import time
+from urllib.parse import urlparse
 
 import grpc
 from node_manager.hash import getHash
@@ -131,7 +132,7 @@ class Node:
         elif port >= 4000:
             return "files/nodos4000"
         else:
-            return "files/default"  # Default directory for any other port range
+            return "files/default" 
 
 
     def getSuccessorPetition(self, serverAddress, keyID):
@@ -161,10 +162,7 @@ class Node:
         with grpc.insecure_channel(f'{serverAddress[0]}:{serverAddress[1]}') as channel:
             stub = node_service_pb2_grpc.NodeServiceStub(channel)
             request = node_service_pb2.DefaultRequest()
-            print("request update finger table")
             response = stub.UpdateFingerTable(request)
-            print("response update finger table")
-            print(response)
             return (response.ip, response.port)        
 
     def getSuccessor(self, address, keyID):
@@ -238,12 +236,9 @@ class Node:
     def updateOtherFTables(self):
         here = self.succ
         while True:
-            print("hereeee")
-            print(here)
             if here == self.address:
                 break
             try:
-                print("try to send a update finger table pertition")
                 response = self.UpdateFingerTablePetition(here)         
                 here = response
                 if here == self.succ:
@@ -263,7 +258,6 @@ class Node:
                 self.updateFTable()
                 self.updateOtherFTables()
                 return_value = sDataList[0]
-                print(return_value)
                 return return_value
            
         
@@ -331,22 +325,20 @@ class Node:
                         if response.files:
                             return response.files
 
-                        # Get the next node
                         next_node_request = node_service_pb2.NodeId(id=self.succID)
                         next_node_response = stub.LookUpID(next_node_request)
                         next_node = (next_node_response.address.ip, next_node_response.address.port)
                         
                         if next_node == self.address:
-                            break  # We've gone around the entire network
+                            break  
                         
                         current_node = next_node
 
                 except grpc.RpcError as e:
                     print(f"Error searching node {current_node}: {e}")
-                    # Try with the next known node
                     current_node = self.succ
 
-            return []  # If we've searched the entire network without finding matches
+            return []  
 
 
     def dummyUpload(self, filename, target_node):
@@ -377,8 +369,9 @@ class Node:
         self.printMenu()
         userChoice = input()
         if userChoice == "1":
-            ip = input("Enter IP to connect: ")
-            port = input("Enter port: ")
+            parsed_url = urlparse(self.seed_url)
+            ip = parsed_url.hostname
+            port = parsed_url.port
             self.sendJoinRequest(ip, int(port))
         elif userChoice == "2":
             self.leaveNetwork()
