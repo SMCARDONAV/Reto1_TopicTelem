@@ -4,6 +4,7 @@ from concurrent import futures
 import threading
 import time
 from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor
 
 import grpc
 from node_manager.hash import getHash
@@ -108,6 +109,7 @@ class Node_service(node_service_pb2_grpc.NodeServiceServicer):
         except Exception as e:
             print(f"Error occurred: {e}")
             return node_service_pb2.SearchFileResponse()
+
 class Node:
     def __init__(self, ip, port, directory=None, seed_url=None):
         self.filenameList = []
@@ -310,40 +312,37 @@ class Node:
         return files
 
     def searchFileInNetwork(self, search_term):
-        # with self.lock:
-            current_node = self.address
-            visited_nodes = set()
+        current_node = self.address
+        visited_nodes = set()
 
-            while True:
-                if current_node in visited_nodes:
-                    break
-                visited_nodes.add(current_node)
+        while True:
+            if current_node in visited_nodes:
+                break
+            visited_nodes.add(current_node)
 
-                try:
-                    with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
-                        stub = node_service_pb2_grpc.NodeServiceStub(channel)
-                        request = node_service_pb2.SearchFileRequest(filename=search_term)
-                        response = stub.SearchFile(request)
+            try:
+                with grpc.insecure_channel(f'{current_node[0]}:{current_node[1]}') as channel:
+                    stub = node_service_pb2_grpc.NodeServiceStub(channel)
+                    request = node_service_pb2.SearchFileRequest(filename=search_term)
+                    response = stub.SearchFile(request)
 
-                        if response.files:
-                            return response.files
+                    if response.files:
+                        return response.files
 
-                        next_node_request = node_service_pb2.NodeId(id=self.succID)
-                        next_node_response = stub.LookUpID(next_node_request)
-                        next_node = (next_node_response.address.ip, next_node_response.address.port)
-                        
-                        if next_node == self.address:
-                            break  
-                        
-                        current_node = next_node
+                    next_node_request = node_service_pb2.NodeId(id=self.succID)
+                    next_node_response = stub.LookUpID(next_node_request)
+                    next_node = (next_node_response.address.ip, next_node_response.address.port)
+                    
+                    if next_node == self.address:
+                        break
+                    
+                    current_node = next_node
 
-                except grpc.RpcError as e:
-                    print(f"Error searching node {current_node}: {e}")
-                    current_node = self.succ
+            except grpc.RpcError as e:
+                print(f"Error searching node {current_node}: {e}")
+                current_node = self.succ
 
-            return []  
-
-
+        return []
     def dummyUpload(self, filename, target_node):
         try:
             with grpc.insecure_channel(f'{target_node[0]}:{target_node[1]}') as channel:
@@ -421,13 +420,13 @@ class Node:
 
     def start(self):
         grpc_port = self.port
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        server = grpc.server(ThreadPoolExecutor(max_workers=10))
         node_service_pb2_grpc.add_NodeServiceServicer_to_server(Node_service(self), server)
         file_service_pb2_grpc.add_FileServiceServicer_to_server(FileServicer(self), server)
         server.add_insecure_port(f"{self.ip}:{grpc_port}")
         server.start()
         print(f"gRPC Server started on {self.ip}:{grpc_port}")
-        while end != True:
+        while not end:
             print("Listening to other clients")   
             self.asAClientThread()
         
