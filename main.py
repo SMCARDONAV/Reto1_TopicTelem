@@ -27,9 +27,10 @@ def create_and_run_node(ip, port):
 
 
 def start_grpc_server(node):
-    grpc_thread = Thread(target=node.start)
-    grpc_thread.start()
-    return grpc_thread
+    # grpc_thread = Thread(target=node.start)
+    # grpc_thread.start()
+    # return grpc_thread
+    node.start()
 
 
 def parse_arguments():
