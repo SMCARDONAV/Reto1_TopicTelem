@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  node1:
+    image: p2p_service
+    container_name: p2p_node_1
+    ports: 
+      - "2000:2000"
+    environment:
+      - NODE_ID=1
+    command: ["python", "main.py"]
+    networks:
+      - p2p_network
+    tty: true
+    stdin_open: true
+
+  node2:
+    image: p2p_service
+    container_name: p2p_node_2
+    ports: 
+      - "3000:3000"
+    command: ["python", "main.py"]
+    environment:
+      - NODE_ID=2
+    networks:
+      - p2p_network
+    tty: true
+    stdin_open: true
+
+  node3:
+    image: p2p_service
+    container_name: p2p_node_3
+    ports: 
+      - "4000:4000"
+    command: ["python", "main.py"]
+    environment:
+      - NODE_ID=3
+    networks:
+      - p2p_network
+    tty: true
+    stdin_open: true
+
+  node4:
+    image: p2p_service
+    container_name: p2p_node_4
+    ports: 
+      - "5000:5000"
+    command: ["python", "main.py"]
+    environment:
+      - NODE_ID=4
+    networks:
+      - p2p_network
+    tty: true
+    stdin_open: true
+
+networks:
+  p2p_network:
+    driver: bridge
