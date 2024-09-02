@@ -86,9 +86,13 @@ Conectar la instancia nodo_2 y ejecutar el siguiente comando:
 docker run --network=p2p_network --ip=34.237.50.206 -i -p 3000:3000 mi-nodo
 Elegir la opción 1 desde el nodo_2
 ![image](https://github.com/user-attachments/assets/1d037170-b796-4008-9353-46f5b868a3e3)
+
 Deberá aparecer el siguiente mensaje:
+
 ![image](https://github.com/user-attachments/assets/47b42659-acb4-4686-bcdd-85f12c15759f)
+
 También se hizo la creación del tercer nodo el cual debia unirse a la red: 
+
 ![image](https://github.com/user-attachments/assets/fe079402-1f29-4273-a5d2-5eaaa20ae2a0)
 
 Pero se recibe este error al tratar de hacer una conexión a la red de nodos: 
