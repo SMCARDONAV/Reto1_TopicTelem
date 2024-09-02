@@ -64,7 +64,7 @@ Una de las practicas mas relevantes en el desarrollo de este programa es el uso 
 3. Para estos archivos en la linea sea adicionar la palabra from .(punto) al inicio 
 ![image](https://github.com/user-attachments/assets/ff1c7533-2135-470a-9dfc-dd37b6a53cc9)
 
-## detalles del desarrollo.
+## Detalles del desarrollo.
 El desarrollo se realizó usando comunicación gRPC entre los clientes y servidores. Se procuró hacer una correcta distribución de responsabilidades en las funciones y clases. Se hace uso del algoritmo de Chord DHT para administración de la red de peers los cuales se identifican en la red mediante la combinación del hash que representa su ip y su puerto, de esta forma se puede determinar quien es el predecesor y sucesor que tiene cada uno de ellos al entrar a la red. El punto de entrada siempre es el nodo_1 el cual se identifica con la ip que se le asigne y el puerto 2000. Internamente cada uno de los nodos creados tiene una fuente de archivos especifica la cual no es accesible por otros nodos, esto permite que se haga una correcta localización de recursos para sacarle provecho al algoritmo Chord.  
 ## detalles técnicos
 ## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)}
@@ -75,8 +75,6 @@ La configuración de puertos, ip's y conexiones a datos se hace mediante el arch
 - puerto: donde el programa se va a ejecutar.
 - directory: donde se encuentran ubicados los archivos de los nodos.
 - seed_url: nodo de inicio, este nodo es el punto de entrada a la red para cualquier otro nodo que quiera unirse. 
-
-## opcionalmente - si quiere mostrar resultados o pantallazos 
 
 ## 4. Descripción del ambiente de producción.
 
