@@ -41,7 +41,7 @@
 
 ## 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-## 3. Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
+## 3. Descripción del ambiente de desarrollo y técnico.
 
 ### Python 3.12.5
 ### Librerias
@@ -50,6 +50,12 @@
 ### pyyaml 6.0
 
 ## como se compila y ejecuta.
+### 1.clonar el repositorio https://github.com/SMCARDONAV/Reto1_TopicTelem.git
+### 2.ejecutar en la terminal pip install -r requirements.txt
+### ubicarse en la carpeta proto y ejecutar los siguientes comandos: python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. node_service.proto y python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. node_service.proto. 
+### 3. Para estos archivos en la linea sea adicionar la palabra from .(punto) al inicio 
+![image](https://github.com/user-attachments/assets/ff1c7533-2135-470a-9dfc-dd37b6a53cc9)
+
 ## detalles del desarrollo.
 ## detalles técnicos
 ## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
