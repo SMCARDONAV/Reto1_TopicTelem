@@ -65,6 +65,7 @@ El desarrollo se realizó usando comunicación gRPC entre los clientes y servido
 ## detalles técnicos
 ## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)}
 La configuración de puertos, ip's y conexiones a datos se hace mediante el archivo de inicialización config.yaml el cual recibe estas variables de la siguiente forma: 
+
 ![image](https://github.com/user-attachments/assets/3f352ce7-09c0-41ff-84ff-ab63e4ccb46b)
 - ip: donde va a correr el nodo. 
 - puerto: donde el programa se va a ejecutar.
@@ -88,6 +89,11 @@ Elegir la opción 1 desde el nodo_2
 Deberá aparecer el siguiente mensaje:
 ![image](https://github.com/user-attachments/assets/47b42659-acb4-4686-bcdd-85f12c15759f)
 También se hizo la creación del tercer nodo el cual debia unirse a la red: 
+![image](https://github.com/user-attachments/assets/fe079402-1f29-4273-a5d2-5eaaa20ae2a0)
+
+Pero se recibe este error al tratar de hacer una conexión a la red de nodos: 
+
+![image](https://github.com/user-attachments/assets/917f1660-a139-4acb-831e-4f0415b240fc)
 
 
 ## 5. otra información que considere relevante para esta actividad.
