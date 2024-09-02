@@ -6,7 +6,7 @@ service NodeService{
     rpc JoinNetwork (Address) returns (ResponseMessage){}
     rpc LeaveNetwork(DefaultRequest) returns (ResponseMessage){}
     rpc GetFingerTable(DefaultRequest) returns (ResponseMessage){}
-    rpc GetPredSucc(DefaultRequest) returns (ResponseMessage){}
+    rpc GetPredSucc(DefaultRequest) returns (PredSuccResponse) {}
     rpc LookUpID(NodeId) returns (JoinNodeResponse){}
     rpc ConnectPeer(Address) returns (Address){}
     rpc UpdateFingerTable(DefaultRequest) returns(Address){}
@@ -59,4 +59,10 @@ message UploadRequest {
 
 message UploadResponse {
   string message = 1;
+}
+
+message PredSuccResponse {
+  int64 MyID = 1;
+  Address Predecessor = 2;
+  Address Successor = 3;
 }

@@ -126,18 +126,18 @@ class Node:
         self.seed_url = seed_url
         # self.lock = threading.Lock()
 
-    # def get_directory_for_port(self, port):
-    #     if 2000 <= port <= 2999:
-    #         return "files/nodos2000"
-    #     elif 3000 <= port <= 3999:
-    #         return "files/nodos3000"
-    #     elif port >= 4000:
-    #         return "files/nodos4000"
-    #     else:
-    #         return "files/default"  # Default directory for any other port range
-
     def get_directory_for_port(self, port):
-        return "files"  # All nodes will use the same directory
+        if 2000 <= port <= 2999:
+            return "files/nodos2000"
+        elif 3000 <= port <= 3999:
+            return "files/nodos3000"
+        elif port >= 4000:
+            return "files/nodos4000"
+        else:
+            return "files/default"  # Default directory for any other port range
+
+    # def get_directory_for_port(self, port):
+    #     return "files"  # All nodes will use the same directory
 
 
     def getSuccessorPetition(self, serverAddress, keyID):
