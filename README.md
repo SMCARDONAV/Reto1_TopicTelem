@@ -42,7 +42,11 @@ El código implementa un sistema basado en el protocolo de Chord para gestionar 
 - No se logró implementar la función de listar y buscar archivos en AWS.
 
 ## 2. Información General de Diseño de Alto Nivel
-Descripción de la arquitectura, patrones y mejores prácticas utilizadas.
+La arquitectura planteada para este proyecto es una arquitectura peer to peer basada en una red distribuda estructurada donde se hace uso del protocolo chord para la localización eficiente de recursos. Cada componente participe de esta arquitectura, es decir, cada nodo actua como cliente y como servidor al mismo tiempo permitiendo responder a solicitudes de otros nodos, al igual que hacer peticiones a estos. Los nodos están diseñados para cumplir diversas tareas incluyendo almacenamiento, busqueda, recuperación y transferencia (no real) de archivos. 
+
+Esta arquitectura fue plantaeda para cubrir las diversas caracteristicas de una red distribuida siendo estos la escalabilidad, la resiliencia, la eficiencia y la consistencia. 
+Se hizo uso de patrones como el de microservicios y consistencia eventual. 
+Una de las practicas mas relevantes en el desarrollo de este programa es el uso del middleware gRPC lo que permite un mejor rendimiento y una baja latencia en la comunicación.
 
 ## 3. Descripción del Ambiente de Desarrollo y Técnico
 - **Python:** 3.12.5
