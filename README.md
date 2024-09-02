@@ -61,14 +61,24 @@ Descripción de la arquitectura, patrones y mejores prácticas utilizadas.
 ![image](https://github.com/user-attachments/assets/ff1c7533-2135-470a-9dfc-dd37b6a53cc9)
 
 ## detalles del desarrollo.
+El desarrollo se realizó usando comunicación gRPC entre los clientes y servidores. Se procuró hacer una correcta distribución de responsabilidades en las funciones y clases. Se hace uso del algoritmo de Chord DHT para administración de la red de peers los cuales se identifican en la red mediante la combinación del hash que representa su ip y su puerto, de esta forma se puede determinar quien es el predecesor y sucesor que tiene cada uno de ellos al entrar a la red. El punto de entrada siempre es el nodo_1 el cual se identifica con la ip que se le asigne y el puerto 2000. Internamente cada uno de los nodos creados tiene una fuente de archivos especifica la cual no es accesible por otros nodos, esto permite que se haga una correcta localización de recursos para sacarle provecho al algoritmo Chord.  
 ## detalles técnicos
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)}
+La configuración de puertos, ip's y conexiones a datos se hace mediante el archivo de inicialización config.yaml el cual recibe estas variables de la siguiente forma: 
+![image](https://github.com/user-attachments/assets/3f352ce7-09c0-41ff-84ff-ab63e4ccb46b)
+- ip: donde va a correr el nodo. 
+- puerto: donde el programa se va a ejecutar.
+- directory: donde se encuentran ubicados los archivos de los nodos.
+- seed_url: nodo de inicio, este nodo es el punto de entrada a la red para cualquier otro nodo que quiera unirse. 
+
 ## opcionalmente - si quiere mostrar resultados o pantallazos 
 
 ## 4. Descripción del ambiente de producción.
 
 En la sesión de instancias se tienes dos creadas llamada nodo_1 y nodo_2
 ![image](https://github.com/user-attachments/assets/e344d27a-c66d-4613-b62a-4b2c6bcd6936)
+IP nodo_1: 34.197.114.29 - puerto: 2000
+IP nodo 2: 34.237.50.206 - puerto: 3000
 Conectar la instancia nodo_1 y ejecutar el siguiente comando:
 docker run --network=p2p_network --ip=34.197.114.29 -i -p 2000:2000 mi-nodo
 Conectar la instancia nodo_2 y ejecutar el siguiente comando:
@@ -77,11 +87,14 @@ Elegir la opción 1 desde el nodo_2
 ![image](https://github.com/user-attachments/assets/1d037170-b796-4008-9353-46f5b868a3e3)
 Deberá aparecer el siguiente mensaje:
 ![image](https://github.com/user-attachments/assets/47b42659-acb4-4686-bcdd-85f12c15759f)
+También se hizo la creación del tercer nodo el cual debia unirse a la red: 
+
 
 ## 5. otra información que considere relevante para esta actividad.
 
 ## referencias:
-<debemos siempre reconocer los créditos de partes del código que reutilizaremos, así como referencias a youtube, o referencias bibliográficas utilizadas para desarrollar el proyecto o la actividad>
-## sitio1-url 
-## sitio2-url
-## url de donde tomo info para desarrollar este proyecto
+https://reactiveprogramming.io/blog/es/estilos-arquitectonicos/p2p![image](https://github.com/user-attachments/assets/7841b04e-c964-464b-91e6-dbe99bd1fa2d)
+https://github.com/MNoumanAbbasi/Chord-DHT-for-File-Sharing![image](https://github.com/user-attachments/assets/2d623b6e-d7be-404b-b720-0e337d40854f)
+https://www.youtube.com/watch?v=gnchfOojMk4
+https://grpc.io/docs/languages/python/quickstart/
+
