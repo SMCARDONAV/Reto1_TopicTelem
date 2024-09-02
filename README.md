@@ -63,6 +63,8 @@ Una de las practicas mas relevantes en el desarrollo de este programa es el uso 
 2. ubicarse en la carpeta proto y ejecutar los siguientes comandos: python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. node_service.proto y python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. node_service.proto. 
 3. Para estos archivos en la linea sea adicionar la palabra from .(punto) al inicio 
 ![image](https://github.com/user-attachments/assets/ff1c7533-2135-470a-9dfc-dd37b6a53cc9)
+4. Hacer configuración en archivo config.yaml según ip y puerto en que se desee correr el programa.
+5. Correr con el comando: python main.py
 
 ## Detalles del desarrollo.
 El desarrollo se realizó usando comunicación gRPC entre los clientes y servidores. Se procuró hacer una correcta distribución de responsabilidades en las funciones y clases. Se hace uso del algoritmo de Chord DHT para administración de la red de peers los cuales se identifican en la red mediante la combinación del hash que representa su ip y su puerto, de esta forma se puede determinar quien es el predecesor y sucesor que tiene cada uno de ellos al entrar a la red. El punto de entrada siempre es el nodo_1 el cual se identifica con la ip que se le asigne y el puerto 2000. Internamente cada uno de los nodos creados tiene una fuente de archivos especifica la cual no es accesible por otros nodos, esto permite que se haga una correcta localización de recursos para sacarle provecho al algoritmo Chord.  
