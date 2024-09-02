@@ -68,8 +68,8 @@ Una de las practicas mas relevantes en el desarrollo de este programa es el uso 
 
 ## Detalles del desarrollo.
 El desarrollo se realizó usando comunicación gRPC entre los clientes y servidores. Se procuró hacer una correcta distribución de responsabilidades en las funciones y clases. Se hace uso del algoritmo de Chord DHT para administración de la red de peers los cuales se identifican en la red mediante la combinación del hash que representa su ip y su puerto, de esta forma se puede determinar quien es el predecesor y sucesor que tiene cada uno de ellos al entrar a la red. El punto de entrada siempre es el nodo_1 el cual se identifica con la ip que se le asigne y el puerto 2000. Internamente cada uno de los nodos creados tiene una fuente de archivos especifica la cual no es accesible por otros nodos, esto permite que se haga una correcta localización de recursos para sacarle provecho al algoritmo Chord.  
-## detalles técnicos
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)}
+
+## Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)}
 La configuración de puertos, ip's y conexiones a datos se hace mediante el archivo de inicialización config.yaml el cual recibe estas variables de la siguiente forma: 
 
 ![image](https://github.com/user-attachments/assets/3f352ce7-09c0-41ff-84ff-ab63e4ccb46b)
@@ -104,9 +104,7 @@ Pero se recibe este error al tratar de hacer una conexión a la red de nodos:
 ![image](https://github.com/user-attachments/assets/917f1660-a139-4acb-831e-4f0415b240fc)
 
 
-## 5. otra información que considere relevante para esta actividad.
-
-## referencias:
+## Referencias:
 https://reactiveprogramming.io/blog/es/estilos-arquitectonicos/p2p![image](https://github.com/user-attachments/assets/7841b04e-c964-464b-91e6-dbe99bd1fa2d)
 https://github.com/MNoumanAbbasi/Chord-DHT-for-File-Sharing![image](https://github.com/user-attachments/assets/2d623b6e-d7be-404b-b720-0e337d40854f)
 https://www.youtube.com/watch?v=gnchfOojMk4
